@@ -8,13 +8,15 @@
 
 **This is a prototype, and accuracy is modest.** Lip reading is hard, and silent mouthing is harder than speech: expect word errors, especially on technical terms, so read the text before you send it. Claude is told which words were lip-read (with the model's other readings), so it reads them in context and asks before acting on anything destructive.
 
-Recognition uses Auto-AVSR's visual-only model [`vsr_trlrs2lrs3vox2avsp_base`](https://github.com/mpc001/auto_avsr#model-zoo): 250M parameters, trained on 3,291 hours of video (LRS2, LRS3, VoxCeleb2, AVSpeech). Accuracy is measured as word error rate (WER): wrong, missing and extra words divided by the words actually said, so lower is better.
+Recognition uses Auto-AVSR's visual-only model [`vsr_trlrs2lrs3vox2avsp_base`](https://github.com/mpc001/auto_avsr#model-zoo): 250M parameters, trained on 3,291 hours of video (LRS2, LRS3, VoxCeleb2, AVSpeech).
 
-| Setting | WER | Words right, roughly |
-|---|---:|---:|
-| This model on the LRS3 benchmark (TED talks, spoken aloud), as published by Auto-AVSR | **20.3%** | ~80% |
-| For comparison: Auto-AVSR's audio models on the same benchmark | 1.0–2.0% | ~98–99% |
-| Silent mouthing at a desk webcam, stock model, in the author's first tests | much higher | about half of short phrases right |
+| Setting | Words recognized correctly |
+|---|---:|
+| This model on the LRS3 benchmark (TED talks, spoken aloud), as published by Auto-AVSR¹ | **~80%** |
+| For comparison: Auto-AVSR's models that listen to the audio, same benchmark | ~98–99% |
+| Silent mouthing at a desk webcam, stock model, in the author's first tests | **about half of short phrases** |
+
+<sub>¹ Published as a 20.3% word error rate (wrong, missing and extra words per word said).</sub>
 
 Why it is lower here than on the benchmark:
 
@@ -23,7 +25,7 @@ Why it is lower here than on the benchmark:
 - **Vocabulary:** TED talks rarely say "refactor" or "pull request".
 - **Speed over accuracy:** the plugin decodes with a beam of 10 and no external language model, to show the text about half a second after Stop.
 
-What helps: short phrases, facing the camera in even light, mouthing a little more clearly than you would speak, and [training it on your lips](#train-it-on-your-lips). Training measures your own WER on held-out phrases before and after and keeps the personal model only when it is lower, and **⚙ Settings → 🕘 History** shows what the model read and what else it considered, so you can see your own accuracy.
+What helps: short phrases, facing the camera in even light, mouthing a little more clearly than you would speak, and [training it on your lips](#train-it-on-your-lips). Training checks how many words it gets wrong on held-out phrases, before and after, and keeps the personal model only when it gets fewer wrong, and **⚙ Settings → 🕘 History** shows what the model read and what else it considered, so you can see your own accuracy.
 
 ## Why
 
@@ -90,7 +92,7 @@ In a terminal session, focus the button with ctrl+x then tab and press `l`, or b
 
 1. The row shows a phrase to mouth, such as «run the tests», with the usual **■ Stop** and waveform. Mouth it and press Stop. Only the mouth area (96×96 px) of each phrase is kept, in `~/.cache/lip-dictation/personal/`.
 2. Press **● Next phrase** for the next one, as many as you like: **Train** appears after 20, and about 100 (10 to 15 minutes) works best. **Done** stops; the next `/lip-train` continues where you left off.
-3. Press **Train**. A progress bar runs for a few minutes (about 1 second per phrase per pass, 8 passes). It adds small LoRA adapters (about 2M parameters) to the model's encoder, the part that reads the lips, and leaves the decoder, its language model, as it was, holds one phrase in five out, and measures the word error rate on those before and after. A toast reports both; the personal model replaces the stock one only when it makes fewer errors.
+3. Press **Train**. A progress bar runs for a few minutes (about 1 second per phrase per pass, 8 passes). It adds small LoRA adapters (about 2M parameters) to the model's encoder, the part that reads the lips, and leaves the decoder, its language model, as it was, holds one phrase in five out, and counts the words it gets wrong on those, before and after. A toast reports both; the personal model replaces the stock one only when it makes fewer errors.
 
 The phrases mix everyday English with short requests to a coding assistant, so the adapter learns your lips rather than one topic.
 
@@ -119,7 +121,7 @@ button / /lip ──► mod (hooks/register.tsx) ──spawn──► scripts/li
 ```
 
 - `sidecar/lipread/model.py`: mouth crops (MediaPipe) → Auto-AVSR encoder (on the GPU) → beam search, plus the personal adapter when it is on.
-- `sidecar/lipread/personal.py`: the training phrases, LoRA training of the encoder and the word error rate check.
+- `sidecar/lipread/personal.py`: the training phrases, LoRA training of the encoder and the before/after accuracy check.
 - `scripts/camera-app/`: the helper app macOS grants camera access to (see the comment in `main.c`).
 - Each dictation is a line in `~/.cache/lip-dictation/dictations.jsonl`, the History pane's source.
 
