@@ -17,6 +17,25 @@ Voice dictation needs you to speak out loud. Typing needs your hands and attenti
 - **Privacy:** nobody nearby hears what you ask, and recognition never leaves your Mac.
 - **Resting your hands or voice:** short commands without typing, or when speaking aloud is hard or tiring.
 
+## Accuracy
+
+Recognition uses Auto-AVSR's visual-only model [`vsr_trlrs2lrs3vox2avsp_base`](https://github.com/mpc001/auto_avsr#model-zoo): 250M parameters, trained on 3,291 hours of video (LRS2, LRS3, VoxCeleb2, AVSpeech). Accuracy is measured as word error rate (WER): wrong, missing and extra words divided by the words actually said, so lower is better.
+
+| Setting | WER | Words right, roughly |
+|---|---:|---:|
+| This model on the LRS3 benchmark (TED talks, spoken aloud), as published by Auto-AVSR | **20.3%** | ~80% |
+| For comparison: Auto-AVSR's audio models on the same benchmark | 1.0–2.0% | ~98–99% |
+| Silent mouthing at a desk webcam, stock model, in the author's first tests | much higher | about half of short phrases right |
+
+Why it is lower here than on the benchmark:
+
+- **Silent mouthing moves the lips less** than speaking aloud, and the model learned from people speaking aloud.
+- **A laptop webcam** at an angle, in office light, is harder than a TV camera on a well-lit face.
+- **Vocabulary:** TED talks rarely say "refactor" or "pull request".
+- **Speed over accuracy:** the plugin decodes with a beam of 10 and no external language model, to show the text about half a second after Stop.
+
+What helps: short phrases, facing the camera in even light, mouthing a little more clearly than you would speak, and [training it on your lips](#train-it-on-your-lips). Training measures your own WER on held-out phrases before and after and keeps the personal model only when it is lower, and **⚙ Settings → 🕘 History** shows what the model read and what else it considered, so you can see your own accuracy.
+
 ## Quick start
 
 1. **Install the plugin.** In a terminal session of Claude Code:
