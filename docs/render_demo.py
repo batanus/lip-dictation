@@ -240,7 +240,7 @@ def frame(state: dict) -> Image.Image:
         seg = 160
         start = x0 + (x1 - x0 - seg) * state["p"]
         d.rounded_rectangle((start, mid - 4, start + seg, mid + 4), radius=4, fill=CLAUDE)
-        d.text((x1 + 20, mid), "0:03 clip", font=font, fill=DIM, anchor="lm")
+        d.text((x1 + 20, mid), f"0:0{state.get('clip', 3)} clip", font=font, fill=DIM, anchor="lm")
 
     d.rounded_rectangle(PROMPT_BOX, radius=22, fill=PROMPT, outline=PROMPT_BORDER, width=2)
     cy = (PROMPT_BOX[1] + PROMPT_BOX[3]) // 2
@@ -262,9 +262,9 @@ LEVELS = [0.05, 0.3, 0.75, 0.55, 0.2, 0.1, 0.6, 0.85, 0.4, 0.15, 0.7, 0.9, 0.5, 
 ROUND = [0.0, 0.8, 0.9, 0.4, 0.0, 0.0, 0.2, 0.1, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.2, 0.1, 0.0, 0.0, 0.0, 0.0]
 
 
-def smooth(samples, t: float) -> float:
-    """The samples (10 a second) eased between, so the lips move at the frame rate."""
-    x = min(t * 10, len(samples) - 1.0001)
+def smooth(samples, t: float, rate: float = 10) -> float:
+    """The samples (`rate` a second) eased between, so the lips move at the frame rate."""
+    x = min(t * rate, len(samples) - 1.0001)
     i = int(x)
     f = (1 - math.cos((x - i) * math.pi)) / 2
     return samples[i] * (1 - f) + samples[i + 1] * f
@@ -279,36 +279,58 @@ def cursor(t: float) -> bool:
     return int(t * 2) % 2 == 0
 
 
-SCENES = []  # (seconds, state at time t into the scene); each step stays long enough to read
-PRESS = "Press Lip dictation above the prompt"
-SCENES.append((2.4, lambda t: {"phase": "idle", "step": 0, "caption": PRESS, "cursor": cursor(t)}))
-SCENES.append((0.3, lambda t: {"phase": "idle", "step": 0, "caption": PRESS, "pressed": True}))
-SCENES.append((1.4, lambda t: {"phase": "starting", "step": 0, "caption": "The camera turns on; its light shows it", "camera": True, "blink": blink(t, 0.8)}))
+def read_time(caption: str) -> float:
+    """Long enough to read the caption while watching: 1.5 s to look, then 12 characters a second."""
+    return round(1.5 + len(caption) / 12, 1)
 
-# Still lips, the phrase, still lips again: ten samples a second.
-SAMPLES = [0.0] * 6 + LEVELS + [0.0] * 6
-ROUNDS = [0.0] * 6 + ROUND + [0.0] * 6
-RECORD = len(SAMPLES) / 10
+
+SCENES = []  # (seconds, state at time t into the scene); one caption per step, shown for the whole step
+
+C1 = "Press Lip dictation: the camera turns on"
+T1 = read_time(C1)
+PRESS_AT = T1 * 0.45
+SCENES.append((PRESS_AT, lambda t: {"phase": "idle", "step": 0, "caption": C1, "cursor": cursor(t)}))
+SCENES.append((0.3, lambda t: {"phase": "idle", "step": 0, "caption": C1, "pressed": True}))
+SCENES.append((T1 - PRESS_AT - 0.3, lambda t: {"phase": "starting", "step": 0, "caption": C1, "camera": True, "blink": blink(t, 1.0)}))
+
+C2 = "Silently mouth \u201crun the tests\u201d: the waveform follows your lips"
+T2 = read_time(C2)
+RATE = 7  # mouthing at an easy pace: the phrase takes about 3 seconds
+SAMPLES = [0.0] * 8 + LEVELS + [0.0] * int(T2 * RATE)
+ROUNDS = [0.0] * 8 + ROUND + [0.0] * int(T2 * RATE)
 
 
 def recording(t: float) -> dict:
     return {
         "phase": "recording",
         "step": 1,
-        "caption": "Silently mouth “run the tests”: the waveform follows your lips",
+        "caption": C2,
         "camera": True,
-        "mouth": smooth(SAMPLES, t),
-        "round": smooth(ROUNDS, t),
-        "blink": blink(t, 2.9),
-        "levels": SAMPLES[: int(t * 10) + 1],
+        "mouth": smooth(SAMPLES, t, RATE),
+        "round": smooth(ROUNDS, t, RATE),
+        "blink": blink(t, T2 - 1.2),
+        # The band samples the lips ten times a second.
+        "levels": [smooth(SAMPLES, k / 10, RATE) for k in range(int(t * 10) + 1)],
         "t": t,
     }
 
 
-SCENES.append((RECORD, recording))
-SCENES.append((1.4, lambda t: {**recording(RECORD), "step": 2, "caption": "Press Stop when you are done", "pressed": 0.5 < t < 0.8, "mouth": 0.0, "blink": 0.0}))
-SCENES.append((1.6, lambda t: {"phase": "processing", "step": 2, "caption": "Your Mac reads your lips, in about a second", "p": (1 - math.cos(min(t / 1.6, 1) * math.pi)) / 2}))
-SCENES.append((3.6, lambda t: {"phase": "idle", "step": 3, "caption": "“Run the tests” is in the prompt: edit it or press Enter", "typed": "Run the tests", "cursor": cursor(t)}))
+SCENES.append((T2, recording))
+
+C3 = "Press Stop: your Mac reads your lips"
+T3 = read_time(C3)
+STOP_AT = T3 * 0.4
+SCENES.append(
+    (STOP_AT, lambda t: {**recording(T2), "step": 2, "caption": C3, "pressed": t > STOP_AT - 0.3, "mouth": 0.0, "blink": 0.0})
+)
+SCENES.append(
+    (T3 - STOP_AT, lambda t: {"phase": "processing", "step": 2, "caption": C3, "clip": int(T2), "p": (1 - math.cos(min(t / (T3 - STOP_AT), 1) * math.pi)) / 2})
+)
+
+C4 = "\u201cRun the tests\u201d is in the prompt: edit it or press Enter"
+SCENES.append((read_time(C4), lambda t: {"phase": "idle", "step": 3, "caption": C4, "typed": "Run the tests", "cursor": cursor(t)}))
+for caption in (C1, C2, C3, C4):
+    print(f"{read_time(caption):4.1f} s  {caption}")
 
 n = 0
 for seconds, state_at in SCENES:
