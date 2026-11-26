@@ -3,11 +3,12 @@
 Colors and sizes are measured from screenshots of the app (docs/band.png, docs/settings.png).
 Needs macOS (system fonts), Pillow and ffmpeg:
     python docs/render_demo.py /tmp/demo-frames
-    cd /tmp/demo-frames && ffmpeg -f concat -safe 0 -i frames.txt \\
-      -vf "fps=25,scale=880:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=none" \\
+    ffmpeg -framerate 25 -i /tmp/demo-frames/f%04d.png \\
+      -vf "scale=880:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=256:stats_mode=full:reserve_transparent=0[p];[b][p]paletteuse=dither=none:diff_mode=rectangle" \\
       -loop 0 <repo>/docs/demo.gif
 """
 
+import math
 import sys
 from pathlib import Path
 
@@ -30,7 +31,14 @@ RED = "#e5534b"
 
 SF = "/System/Library/Fonts/SFNS.ttf"
 font = ImageFont.truetype(SF, 28)
-caption_font = ImageFont.truetype(SF, 44)
+caption_font = ImageFont.truetype(SF, 38)
+step_font = ImageFont.truetype(SF, 26)
+step_bold = ImageFont.font_variant(step_font) if False else ImageFont.truetype(SF, 26)
+try:
+    step_bold.set_variation_by_name("Semibold")
+except Exception:
+    pass
+STEPS = ["Press the button", "Mouth a phrase", "Press Stop", "Text in the prompt"]
 mono = ImageFont.truetype("/System/Library/Fonts/Menlo.ttc", 26)
 symbols = ImageFont.truetype("/System/Library/Fonts/Apple Symbols.ttf", 30)
 emoji_font = ImageFont.truetype("/System/Library/Fonts/Apple Color Emoji.ttc", 160)
@@ -179,12 +187,32 @@ def face(openness: float, rounding: float, blink: float) -> Image.Image:
     return out
 
 
+def timeline(d, current: int):
+    """Four numbered steps joined by a line: done ones checked, the current one lit, the rest dim."""
+    x0, x1, y = 150, 1020, 80
+    xs = [x0 + (x1 - x0) * i / (len(STEPS) - 1) for i in range(len(STEPS))]
+    for i in range(len(STEPS) - 1):
+        d.line((xs[i] + 22, y, xs[i + 1] - 22, y), fill=CLAUDE if i < current else BUTTON, width=4)
+    for i, (x, label) in enumerate(zip(xs, STEPS)):
+        if i < current:
+            d.ellipse((x - 18, y - 18, x + 18, y + 18), fill=CLAUDE)
+            d.line((x - 8, y, x - 2, y + 7, x + 9, y - 7), fill=PAGE, width=4, joint="curve")
+        elif i == current:
+            d.ellipse((x - 22, y - 22, x + 22, y + 22), fill=CLAUDE)
+            d.text((x, y), str(i + 1), font=step_bold, fill=PAGE, anchor="mm")
+        else:
+            d.ellipse((x - 18, y - 18, x + 18, y + 18), outline=BUTTON, width=3)
+            d.text((x, y), str(i + 1), font=step_font, fill=DIM, anchor="mm")
+        d.text((x, y + 46), label, font=step_bold if i == current else step_font, fill=TEXT if i <= current else DIM, anchor="mm")
+
+
 def frame(state: dict) -> Image.Image:
     img = Image.new("RGB", (W, H), PAGE)
     d = ImageDraw.Draw(img)
 
-    # caption on the left, the camera on the right
-    d.text((40, 145), state["caption"], font=caption_font, fill=TEXT, anchor="lm")
+    # the steps on the left, the camera on the right
+    timeline(d, state.get("step", 0))
+    d.text((40, 210), state["caption"], font=caption_font, fill=TEXT, anchor="lm")
     if state.get("camera"):
         card = face(state.get("mouth", 0.0), state.get("round", 0.0), state.get("blink", 0.0))
         img.paste(card, (W - 30 - CARD_W, 24), card)
@@ -227,50 +255,64 @@ def frame(state: dict) -> Image.Image:
     return img
 
 
-frames: list[tuple[dict, float]] = []
+FPS = 25
 
-
-def hold(state: dict, seconds: float):
-    frames.append((state, seconds))
-
-
-# Mouth openness and rounding while mouthing "run the tests", ten samples a second.
+# Mouth openness and rounding while mouthing "run the tests", ten samples a second (the band's rate).
 LEVELS = [0.05, 0.3, 0.75, 0.55, 0.2, 0.1, 0.6, 0.85, 0.4, 0.15, 0.7, 0.9, 0.5, 0.25, 0.65, 0.45, 0.15, 0.05, 0.0, 0.0]
 ROUND = [0.0, 0.8, 0.9, 0.4, 0.0, 0.0, 0.2, 0.1, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.2, 0.1, 0.0, 0.0, 0.0, 0.0]
 
-IDLE = "Press Lip dictation above the prompt"
-hold({"phase": "idle", "caption": IDLE}, 1.4)
-hold({"phase": "idle", "caption": IDLE, "pressed": True}, 0.25)
-hold({"phase": "starting", "caption": "The camera turns on", "camera": True}, 0.5)
-hold({"phase": "starting", "caption": "The camera turns on", "camera": True, "blink": 1.0}, 0.12)
-hold({"phase": "starting", "caption": "The camera turns on", "camera": True}, 0.4)
-levels: list[float] = []
-for i, (level, rounding) in enumerate(zip(LEVELS, ROUND)):
-    levels.append(level)
-    hold(
-        {
-            "phase": "recording",
-            "caption": "Mouth a phrase, without a sound",
-            "camera": True,
-            "mouth": level,
-            "round": rounding,
-            "blink": 1.0 if i == 16 else 0.0,
-            "levels": list(levels),
-            "t": 1 + i / 10,
-        },
-        0.12,
-    )
-hold({"phase": "recording", "caption": "Press Stop", "camera": True, "levels": list(levels), "t": 3, "pressed": True}, 0.6)
-for i in range(10):
-    hold({"phase": "processing", "caption": "Your Mac reads your lips", "p": i / 9}, 0.09)
-for blink in range(5):
-    hold({"phase": "idle", "caption": "The text is in the prompt, ready to send", "typed": "Run the tests", "cursor": blink % 2 == 0}, 0.5)
 
-concat = []
-for n, (state, seconds) in enumerate(frames):
-    name = f"f{n:03d}.png"
-    frame(state).save(OUT / name)
-    concat.append(f"file '{name}'\nduration {seconds}")
-concat.append(f"file 'f{len(frames) - 1:03d}.png'")  # ffmpeg's concat repeats the last file
-(OUT / "frames.txt").write_text("\n".join(concat) + "\n")
-print(len(frames), "frames,", round(sum(s for _, s in frames), 1), "seconds")
+def smooth(samples, t: float) -> float:
+    """The samples (10 a second) eased between, so the lips move at the frame rate."""
+    x = min(t * 10, len(samples) - 1.0001)
+    i = int(x)
+    f = (1 - math.cos((x - i) * math.pi)) / 2
+    return samples[i] * (1 - f) + samples[i + 1] * f
+
+
+def blink(t: float, at: float) -> float:
+    """Eyelids: 0 open, 1 shut, closing and opening over 0.16 s around `at`."""
+    return max(0.0, 1 - abs(t - at) / 0.08)
+
+
+def cursor(t: float) -> bool:
+    return int(t * 2) % 2 == 0
+
+
+SCENES = []  # (seconds, state at time t into the scene); each step stays long enough to read
+PRESS = "Press Lip dictation above the prompt"
+SCENES.append((2.4, lambda t: {"phase": "idle", "step": 0, "caption": PRESS, "cursor": cursor(t)}))
+SCENES.append((0.3, lambda t: {"phase": "idle", "step": 0, "caption": PRESS, "pressed": True}))
+SCENES.append((1.4, lambda t: {"phase": "starting", "step": 0, "caption": "The camera turns on; its light shows it", "camera": True, "blink": blink(t, 0.8)}))
+
+# Still lips, the phrase, still lips again: ten samples a second.
+SAMPLES = [0.0] * 6 + LEVELS + [0.0] * 6
+ROUNDS = [0.0] * 6 + ROUND + [0.0] * 6
+RECORD = len(SAMPLES) / 10
+
+
+def recording(t: float) -> dict:
+    return {
+        "phase": "recording",
+        "step": 1,
+        "caption": "Silently mouth “run the tests”: the waveform follows your lips",
+        "camera": True,
+        "mouth": smooth(SAMPLES, t),
+        "round": smooth(ROUNDS, t),
+        "blink": blink(t, 2.9),
+        "levels": SAMPLES[: int(t * 10) + 1],
+        "t": t,
+    }
+
+
+SCENES.append((RECORD, recording))
+SCENES.append((1.4, lambda t: {**recording(RECORD), "step": 2, "caption": "Press Stop when you are done", "pressed": 0.5 < t < 0.8, "mouth": 0.0, "blink": 0.0}))
+SCENES.append((1.6, lambda t: {"phase": "processing", "step": 2, "caption": "Your Mac reads your lips, in about a second", "p": (1 - math.cos(min(t / 1.6, 1) * math.pi)) / 2}))
+SCENES.append((3.6, lambda t: {"phase": "idle", "step": 3, "caption": "“Run the tests” is in the prompt: edit it or press Enter", "typed": "Run the tests", "cursor": cursor(t)}))
+
+n = 0
+for seconds, state_at in SCENES:
+    for k in range(round(seconds * FPS)):
+        frame(state_at(k / FPS)).save(OUT / f"f{n:04d}.png")
+        n += 1
+print(n, "frames,", round(n / FPS, 1), "seconds at", FPS, "fps")
