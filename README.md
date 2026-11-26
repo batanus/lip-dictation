@@ -12,10 +12,11 @@ Recognition uses Auto-AVSR's visual-only model [`vsr_trlrs2lrs3vox2avsp_base`](h
 
 | | Accuracy |
 |---|---:|
-| TED talks spoken aloud (the model's benchmark¹) | ~80% |
-| Mouthing silently at your webcam | ~50% |
+| **Speaking aloud:** TED talks, the model's published benchmark¹ | ~80% |
+| **From audio** instead of lips, same benchmark, for comparison | ~98% |
+| **Mouthing silently** at a laptop webcam: short phrases, author's first tests | ~50% |
 
-<sub>¹ [Auto-AVSR's published result](https://github.com/mpc001/auto_avsr#model-zoo): 20.3% word error rate on LRS3. The second row: about half of short phrases came out right in the author's first tests.</sub>
+<sub>¹ [Auto-AVSR model zoo](https://github.com/mpc001/auto_avsr#model-zoo): 20.3% word error rate on LRS3 (audio models: 1–2%).</sub>
 
 Why it is lower here than on the benchmark:
 
