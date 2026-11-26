@@ -30,15 +30,15 @@ const HISTORY_PANE = 'lip-dictation-history'
 
 // Used by the status line when the band is hidden.
 const LABELS: Record<Phase, string> = {
-  idle: '🤫 Lip dictation',
+  idle: '📹 Lip dictation',
   starting: '… Starting camera',
   recording: '● Recording: mouth your words',
   processing: '… Reading lips',
   setup: '… Installing lip dictation',
-  enroll: '🤫 Lip training: press the button for the next phrase',
+  enroll: '📹 Lip training: press the button for the next phrase',
   training: '… Training on your lips',
 }
-const SETUP_LABEL = '🤫 Set up lip dictation'
+const SETUP_LABEL = '📹 Set up lip dictation'
 const MIN_CLIPS = 20 // sidecar/lipread/personal.py trains from this many recorded phrases
 
 // The recording waveform: newest sample on the right, one glyph per ~0.1 s. Every glyph stands on
@@ -657,7 +657,7 @@ export const register: Register = (on, options) => {
       const progress = await read($, setupAtom)
       return (
         <Box flexDirection="row" gap={1} alignItems="center">
-          <Text>🤫</Text>
+          <Text>📹</Text>
           <Progress
             label={`Installing lip dictation: ${progress.step}`}
             {...(progress.percent === null ? {} : { value: progress.percent, max: 100 })}
@@ -671,7 +671,7 @@ export const register: Register = (on, options) => {
       const training = await read($, trainAtom)
       return (
         <Box flexDirection="row" gap={1} alignItems="center">
-          <Text>🤫</Text>
+          <Text>📹</Text>
           <Progress
             label={`Training on your lips: ${training.step}`}
             {...(training.total > 0 ? { value: training.done, max: training.total } : {})}
@@ -703,7 +703,7 @@ export const register: Register = (on, options) => {
       const meter = await read($, meterAtom)
       return (
         <Box flexDirection="row" gap={1} alignItems="center">
-          <Text>🤫</Text>
+          <Text>📹</Text>
           <Progress label="Reading lips" valueText={`${formatTime(meter.seconds)} clip`} color="claude" />
         </Box>
       )

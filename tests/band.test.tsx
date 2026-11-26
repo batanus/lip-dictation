@@ -83,7 +83,7 @@ test('settings: training, the personal model switch, history and deleting data',
   expect(await ui.find({ type: 'Button', text: '🧠 Personal model: Off' })).toBeDefined()
 
   await ui.press({ key: 'lip-menu' })
-  expect(await ui.find({ type: 'Button', text: '🤫 Lip dictation' })).toBeDefined()
+  expect(await ui.find({ type: 'Button', text: '📹 Lip dictation' })).toBeDefined()
   await ui.unmount()
 })
 
@@ -126,12 +126,12 @@ for (const surface of ['terminal', 'desktop'] as const) {
       component: 'AbovePrompt',
       props: BAND,
     })
-    expect(await ui.find({ type: 'Button', text: '🤫 Lip dictation' })).toBeDefined()
+    expect(await ui.find({ type: 'Button', text: '📹 Lip dictation' })).toBeDefined()
 
     await ui.press({ key: 'lip' })
     expect(toasts).toEqual([])
     expect(filled).toEqual([' fix the login bug']) // a space, since the draft ends in a word
-    expect(await ui.find({ type: 'Button', text: '🤫 Lip dictation' })).toBeDefined()
+    expect(await ui.find({ type: 'Button', text: '📹 Lip dictation' })).toBeDefined()
     await ui.unmount()
   })
 }
@@ -163,7 +163,7 @@ test('the band shows the recording while it runs', async ($, on) => {
   await ui.press({ key: 'lip' })
   expect(await ui.find({ type: 'Button', text: '■ Stop' })).toBeDefined()
   await clock.advance(1000)
-  expect(await ui.find({ type: 'Button', text: '🤫 Lip dictation' })).toBeDefined()
+  expect(await ui.find({ type: 'Button', text: '📹 Lip dictation' })).toBeDefined()
   await ui.unmount()
 })
 
@@ -185,7 +185,7 @@ test('a missing install turns the button into setup', async ($, on) => {
     props: BAND,
   })
   await ui.press({ key: 'lip' })
-  expect(await ui.find({ type: 'Button', text: '🤫 Set up lip dictation' })).toBeDefined()
+  expect(await ui.find({ type: 'Button', text: '📹 Set up lip dictation' })).toBeDefined()
   await ui.unmount()
 })
 
@@ -227,7 +227,7 @@ test('training: record phrases, train, and hear how much it helped', async ($, o
 
   await ui.press({ key: 'lip-train-now' })
   expect(toasts).toEqual(['Lip dictation now uses your personal model: word errors 50% → 30% on 5 held-out phrases.'])
-  expect(await ui.find({ type: 'Button', text: '🤫 Lip dictation' })).toBeDefined()
+  expect(await ui.find({ type: 'Button', text: '📹 Lip dictation' })).toBeDefined()
   await ui.unmount()
 })
 
@@ -279,6 +279,6 @@ test('after a dictation, the next press starts the loaded standby instead of a n
   await clock.advance(50)
   expect(filled).toEqual(['first', 'second'])
   expect(spawned).toHaveLength(3) // the standby was used, and the next one is loading
-  expect(await ui.find({ type: 'Button', text: '🤫 Lip dictation' })).toBeDefined()
+  expect(await ui.find({ type: 'Button', text: '📹 Lip dictation' })).toBeDefined()
   await ui.unmount()
 })
