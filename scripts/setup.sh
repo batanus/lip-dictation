@@ -1,5 +1,7 @@
 #!/bin/bash
-# One-time install into ~/.cache/lip-dictation (about 1.5 GB to download):
+# One-time install into ~/.cache/lip-dictation (about 1.5 GB to download). Needs nothing installed first:
+# uv (and Python 3.12 through it) is fetched when missing; the Xcode Command Line Tools installer opens
+# when git or clang is missing.
 #   1. Python environment (PyTorch, mediapipe, OpenCV)
 #   2. auto_avsr model code at a pinned commit (only the files inference needs)
 #   3. model weights (~1 GB) from the Auto-AVSR model zoo
@@ -20,6 +22,7 @@ MODEL_NAME="vsr_trlrs2lrs3vox2avsp_base.pth"
 MODEL_GDRIVE_ID="1r1kx7l9sWnDOCnaFHIGvOtzuhFyFA88_"
 MODEL_MD5_PREFIX="49f77"   # all the auto_avsr model zoo table publishes
 MODEL_SHA256="fbf7cd70ff1c0e694b3030fb779dbb4570f04e4b841d62f9296c229e94878ddb"
+UV_VERSION="0.13.10"   # fetched into $HOME_DIR/bin only when uv is not installed
 
 SKIP_MODEL=0
 [ "${1:-}" = "--skip-model" ] && SKIP_MODEL=1
@@ -50,9 +53,26 @@ export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:
 if [ "$(uname -s)" = "Darwin" ] && [ "$(uname -m)" != "arm64" ]; then
   echo "WARNING: PyTorch no longer ships wheels for Intel Macs; setup will likely fail."
 fi
-command -v uv >/dev/null 2>&1 || fail "uv is required. Install it with: brew install uv"
-command -v git >/dev/null 2>&1 || fail "git is required. Install it with: xcode-select --install"
-xcrun --find clang >/dev/null 2>&1 || fail "the Xcode command line tools are required. Install them with: xcode-select --install"
+if ! xcrun --find clang >/dev/null 2>&1 || ! command -v git >/dev/null 2>&1; then
+  xcode-select --install >/dev/null 2>&1 || true  # opens Apple's installer dialog
+  fail "the Xcode Command Line Tools are needed (git and clang). Finish the installer that just opened, then run setup again."
+fi
+
+export PATH="$HOME_DIR/bin:$PATH"
+if ! command -v uv >/dev/null 2>&1; then
+  step "Fetching uv $UV_VERSION (Python package manager, ~20 MB)"
+  UV_ARCHIVE="uv-$(uname -m | sed 's/arm64/aarch64/')-apple-darwin.tar.gz"
+  UV_URL="https://github.com/astral-sh/uv/releases/download/$UV_VERSION/$UV_ARCHIVE"
+  UV_TMP="$(mktemp -d)"
+  curl --fail --location --silent --show-error -o "$UV_TMP/$UV_ARCHIVE" "$UV_URL" \
+    && curl --fail --location --silent --show-error -o "$UV_TMP/$UV_ARCHIVE.sha256" "$UV_URL.sha256" \
+    || { rm -rf "$UV_TMP"; fail "could not download uv from $UV_URL"; }
+  (cd "$UV_TMP" && shasum -a 256 -c "$UV_ARCHIVE.sha256" >/dev/null) || { rm -rf "$UV_TMP"; fail "uv download is corrupt"; }
+  mkdir -p "$HOME_DIR/bin"
+  tar -xzf "$UV_TMP/$UV_ARCHIVE" -C "$HOME_DIR/bin" --strip-components=1
+  rm -rf "$UV_TMP"
+  command -v uv >/dev/null 2>&1 || fail "could not install uv"
+fi
 
 step "1/4 Python environment (~500 MB download)"
 # --locked: install exactly the versions in sidecar/uv.lock (tested), never re-resolve.

@@ -1,27 +1,37 @@
 # lip-dictation
 
-Silent dictation for Claude Code. Press a button above the prompt, mouth English words at your webcam without making a sound, press again, and the words appear in the prompt box. Recognition runs locally with the [Auto-AVSR](https://github.com/mpc001/auto_avsr) visual speech recognition model: video frames stay in memory on your machine and are never sent anywhere.
+**Talk to Claude Code without making a sound.** Press a button above the prompt, mouth a phrase at your webcam, press again, and the words appear in the prompt box. A lip-reading model ([Auto-AVSR](https://github.com/mpc001/auto_avsr)) runs locally on your Mac: no audio is recorded and no video leaves your machine.
 
-> Status: prototype. Lip reading is hard: expect word errors, especially on technical terms. By default the plugin tells Claude which words were lip-read, so it reads them in context and confirms before acting on anything destructive.
+![The lip dictation button above the prompt, with Settings on the right](docs/band.png)
 
-## Requirements
+> **Status: prototype.** Lip reading is hard, and silent mouthing is harder than speech: expect word errors, especially on technical terms. Short phrases work best, and [training it on your lips](#train-it-on-your-lips) helps. Claude is told which words were lip-read (with the model's other readings), so it reads them in context and asks before acting on anything destructive.
 
-- macOS on Apple Silicon (PyTorch no longer ships Intel Mac wheels; the camera helper app is macOS-only).
-- Claude Code with mod support (hooks modules, 2.1.287 or newer; developed against 2.1.331).
-- [uv](https://docs.astral.sh/uv/) (`brew install uv`) and the Xcode command line tools (`xcode-select --install`) for git and clang.
-- A webcam, and about 2.5 GB of disk in `~/.cache/lip-dictation` (about 1.5 GB to download).
+## Why
 
-## Install
+Voice dictation needs you to speak out loud. Typing needs your hands and attention. Silent dictation fits the moments in between:
 
-At the prompt of a terminal session:
+- **Open-plan office, coworking, café, library:** ask Claude to "run the tests" or "show me the diff" without talking over your neighbours.
+- **On a call or in a meeting:** you are muted or listening, and can still send Claude a request.
+- **At home when others are asleep:** late-night work without waking anyone.
+- **Noisy places:** a train, a busy office. Lips don't care about background noise.
+- **Privacy:** nobody nearby hears what you ask, and recognition never leaves your Mac.
+- **Resting your hands or voice:** short commands without typing, or when speaking aloud is hard or tiring.
 
-```
-/plugin install lip-dictation --marketplace batanus/lip-dictation
-```
+## Quick start
 
-In the desktop app: click + next to the prompt box, then Plugins, Add marketplace with `batanus/lip-dictation`, then Add plugin.
+1. **Install the plugin.** In a terminal session of Claude Code:
 
-Then press **📹 Set up lip dictation** (or run `/lip-setup`). It shows the download size and the model's license terms and asks before downloading anything. A progress bar above the prompt shows each step and the model download in percent; the log is in `~/.cache/lip-dictation/setup.log`. You can also run `scripts/setup.sh` from a terminal.
+   ```
+   /plugin install lip-dictation --marketplace batanus/lip-dictation
+   ```
+
+   In the desktop app: click **+** next to the prompt box → **Plugins** → **Add marketplace** `batanus/lip-dictation` → **Add plugin**.
+
+2. **Press 📹 Set up lip dictation** above the prompt (or run `/lip-setup`). It shows the download size and the model's license terms, and starts only when you press Install. Nothing needs to be installed first: setup fetches what is missing (Python, its packages, the model) into `~/.cache/lip-dictation`, about 1.5 GB, with a progress bar above the prompt. If your Mac lacks Apple's Command Line Tools, their installer opens; finish it and press Set up again.
+
+3. **Press 📹 Lip dictation**, allow camera access when macOS asks (once), mouth a phrase, press **■ Stop**.
+
+Requirements: macOS on Apple Silicon, a webcam, about 2.5 GB of disk, and Claude Code 2.1.287 or newer (terminal or desktop app).
 
 ## Use
 
@@ -39,9 +49,23 @@ In a terminal session, focus the button with ctrl+x then tab and press `l`, or b
 
 `meta+l` needs "Use Option as Meta key" turned on in Terminal.app or iTerm2; otherwise pick a combination that is free in your terminal. Typing `/lip` also works, but it replaces whatever is in the prompt box, so use the button or a key binding to add to a draft.
 
+## Settings
+
+**⚙ Settings**, at the right of the row, holds everything else:
+
+![The settings row: personal model switch, training, history, deleting data, and the installed version](docs/settings.png)
+
+- **🧠 Personal model: On / Off** — whether dictation uses the model trained on your lips (shown once you have trained one).
+- **🎯 Train on my lips** — record phrases and train your personal model (below).
+- **🕘 History** — what was read, what else the model considered, and what you sent.
+- **🗑 Delete my data** — training recordings, personal model and history.
+- The installed version, then **✕ Close**.
+
 ## Train it on your lips
 
-The stock model was trained on people speaking aloud; silent mouthing moves the lips less, so it makes more mistakes on you than on its test set. Press **⚙ Settings** (at the right of the row), then **🎯 Train on my lips** (or run `/lip-train`) to adapt it:
+**Why:** the stock model learned from people speaking aloud on TV and in talks. Silent mouthing moves the lips less, and everyone's lips move differently, so out of the box it makes more mistakes on you than on its benchmarks. Ten to fifteen minutes of your own phrases adapt it to you.
+
+**How:** press **⚙ Settings → 🎯 Train on my lips** (or run `/lip-train`):
 
 1. The row shows a phrase to mouth, such as «run the tests», with the usual **■ Stop** and waveform. Mouth it and press Stop. Only the mouth area (96×96 px) of each phrase is kept, in `~/.cache/lip-dictation/personal/`.
 2. Press **● Next phrase** for the next one, as many as you like: **Train** appears after 20, and about 100 (10 to 15 minutes) works best. **Done** stops; the next `/lip-train` continues where you left off.
@@ -82,7 +106,18 @@ button / /lip ──► mod (hooks/register.tsx) ──spawn──► scripts/li
 
 - Camera permission is granted to a small "Lip Dictation" helper app that setup builds from `scripts/camera-app` into `~/.cache/lip-dictation`, not to your terminal or Claude. The sidecar runs through it because macOS refuses the camera without asking when the app running Claude Code declares no camera use, as under Claude Desktop.
 - Dictation frames are kept in memory for the length of one recording and discarded; nothing is written to disk unless you pass `--save` to the command-line tool. Training phrases (`/lip-train`) are the exception: their mouth crops stay in `~/.cache/lip-dictation/personal/`. The history keeps the text of each dictation and of prompts that contained one in `~/.cache/lip-dictation/dictations.jsonl`. **⚙ Settings → 🗑 Delete my data** removes all of it.
-- The only network access is the one-time setup: PyPI (Python packages), GitHub (Auto-AVSR code) and Google Drive (model weights).
+- The only network access is the one-time setup: GitHub (uv, when it is not installed, and the Auto-AVSR code), PyPI (Python packages) and Google Drive (model weights).
+
+## Contributing
+
+Ideas, bug reports and pull requests are all welcome: [open an issue](https://github.com/batanus/lip-dictation/issues) or send a PR. Things that would help most:
+
+- **Accuracy:** better training phrases, smarter training, a language model tuned for dictation, or a newer lip-reading model.
+- **Other languages:** the model reads English only; a Russian or any other model would need new training data.
+- **Platforms:** Intel Macs, Linux and Windows (the camera helper is the macOS-specific part).
+- **Your results:** what works and what doesn't on your lips, camera and lighting. The History pane shows exactly what the model read.
+
+Development: `claude plugin validate .` and `claude plugin test .` check the mod, and `scripts/lipread.sh check --camera` checks the Python side. [GUIDE.ru.md](GUIDE.ru.md) (in Russian) walks through running everything locally.
 
 ## Licenses
 
