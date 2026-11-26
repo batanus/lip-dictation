@@ -1,0 +1,24 @@
+[project]
+name = "lipread"
+version = "0.1.9"
+description = "Local silent-speech (lip reading) recognizer used by the lip-dictation Claude Code plugin"
+requires-python = ">=3.11,<3.13"
+license = "MIT"
+dependencies = [
+    # 2.6+ so torch.load(weights_only=True) is enforced when reading the downloaded weights.
+    "torch>=2.6",
+    "torchvision>=0.21",
+    # auto_avsr's datamodule/transforms.py imports torchaudio at module level.
+    "torchaudio>=2.6",
+    # mediapipe already depends on opencv-contrib-python; a second OpenCV wheel would fight over cv2/.
+    "opencv-contrib-python>=4.8",
+    "scikit-image>=0.21",
+    "sentencepiece>=0.1.99",
+    # The auto_avsr mediapipe detector uses the legacy `mp.solutions` API,
+    # which later mediapipe releases removed. Keep this pin unless the detector is ported.
+    "mediapipe==0.10.21",
+]
+
+[tool.uv]
+# The sidecar is run with PYTHONPATH pointing here, so no build step is needed.
+package = false

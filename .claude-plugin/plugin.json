@@ -1,0 +1,27 @@
+{
+  "name": "lip-dictation",
+  "version": "0.1.9",
+  "description": "Silent dictation for Claude Code: mouth English words at your webcam and a local lip-reading model types them into the prompt.",
+  "author": {
+    "name": "batanus",
+    "url": "https://github.com/batanus"
+  },
+  "homepage": "https://github.com/batanus/lip-dictation",
+  "repository": "https://github.com/batanus/lip-dictation",
+  "license": "MIT",
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "showButton": {
+      "type": "boolean",
+      "title": "Show the dictation button",
+      "description": "Show the lip dictation button above the prompt. /lip works either way.",
+      "default": true
+    },
+    "hintClaude": {
+      "type": "boolean",
+      "title": "Tell Claude the text was lip-read",
+      "description": "Add a hidden note to prompts with dictated text so Claude reads past recognition errors.",
+      "default": true
+    }
+  }
+}

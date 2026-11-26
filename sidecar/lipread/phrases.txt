@@ -1,0 +1,161 @@
+# Training phrases for /lip-train: everyday English mixed with requests to a coding assistant, so the
+# adapter learns how these lips move, not one topic. Words and apostrophes only (the model's alphabet).
+# One clip in five is held out to measure accuracy.
+good morning everyone
+run the tests
+how are you today
+fix the failing test
+the weather is nice today
+open a pull request
+it is very cold outside
+show me the diff
+it is raining again
+commit these changes
+i like summer more than winter
+what does this function do
+the sun is shining
+explain this error
+we went to the park
+add a unit test for this
+my brother lives in another city
+rename this variable
+i have two children
+delete the unused code
+what time is it now
+make it faster
+see you tomorrow
+check the logs
+i am going home
+build the project
+let's have lunch together
+why is the build failing
+i would like a cup of coffee
+undo the last change
+the shop opens at nine
+write the documentation
+my phone is almost dead
+find where this is used
+please close the window
+refactor this class
+the train was late this morning
+add error handling
+i need to buy some bread
+look at the stack trace
+she reads a book every week
+update the readme
+we watched a movie last night
+search the code for this
+the children are playing outside
+try again
+my favorite color is green
+keep going
+he works in a big office
+stop and wait
+i will call you later
+that looks good
+how much does it cost
+this is wrong
+where is the nearest station
+do not change that file
+the room is too warm
+use the same style as before
+i forgot my keys at home
+can you simplify this
+we are going on holiday in july
+add a comment here
+the leaves turn yellow in autumn
+remove the debug output
+spring is my favorite season
+show me the next step
+there are seven days in a week
+split this into smaller functions
+the meeting starts in ten minutes
+move this to a new file
+can you help me with this
+what changed since yesterday
+i don't understand the question
+review my changes
+please speak more slowly
+push the branch
+thank you very much
+create a new branch
+have a nice weekend
+merge the main branch
+the dog is sleeping on the sofa
+resolve the conflict
+my mother makes the best soup
+install the dependencies
+we need more milk
+start the server
+the flowers smell wonderful
+stop the server
+it is getting dark early
+open the settings
+let's go for a walk
+check the network request
+i usually wake up at seven
+the button does not work
+the music is too loud
+the screen is blank
+i lost my umbrella
+the app crashes on launch
+the river is very wide here
+fix the layout on small screens
+my friend is coming to visit
+make the text bigger
+we live on the third floor
+change the color to blue
+the city is beautiful at night
+add a loading state
+i can't find my glasses
+handle the empty case
+dinner is ready
+add a retry
+open the door please
+log the response
+the sky is clear and blue
+print the value
+it was a long day
+read the config file
+i am learning english
+write it to disk
+what are your plans for today
+parse the date
+format the output
+sort the list by name
+filter out the duplicates
+count the items
+return early if it is missing
+make this optional
+add a default value
+check for null
+throw an error here
+catch the exception
+add a timeout
+cancel the request
+cache the result
+clear the cache
+load the image
+resize the image
+save the user settings
+sign the user out
+show an alert
+hide the keyboard
+scroll to the top
+go back to the previous screen
+open the link in the browser
+copy it to the clipboard
+send a notification
+schedule a reminder
+measure the time it takes
+profile the memory usage
+the tests pass now
+thank you
+yes do it
+no not that one
+let me think about it
+explain it in simple words
+give me three options
+which one would you pick
+summarize what you did
+what is left to do

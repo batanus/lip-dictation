@@ -1,0 +1,14 @@
+{
+  "name": "lip-dictation",
+  "owner": {
+    "name": "batanus",
+    "url": "https://github.com/batanus"
+  },
+  "plugins": [
+    {
+      "name": "lip-dictation",
+      "source": "./",
+      "description": "Silent dictation for Claude Code: mouth English words at your webcam and a local lip-reading model types them into the prompt."
+    }
+  ]
+}
