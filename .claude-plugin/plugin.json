@@ -1,6 +1,6 @@
 {
   "name": "lip-dictation",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "description": "Silent dictation for Claude Code: mouth English words at your webcam and a local lip-reading model types them into the prompt.",
   "author": {
     "name": "batanus",

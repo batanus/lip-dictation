@@ -21,11 +21,11 @@ At the prompt of a terminal session:
 
 In the desktop app: click + next to the prompt box, then Plugins, Add marketplace with `batanus/lip-dictation`, then Add plugin.
 
-Then press **👄 Set up lip dictation** (or run `/lip-setup`). It shows the download size and the model's license terms and asks before downloading anything. A progress bar above the prompt shows each step and the model download in percent; the log is in `~/.cache/lip-dictation/setup.log`. You can also run `scripts/setup.sh` from a terminal.
+Then press **🤫 Set up lip dictation** (or run `/lip-setup`). It shows the download size and the model's license terms and asks before downloading anything. A progress bar above the prompt shows each step and the model download in percent; the log is in `~/.cache/lip-dictation/setup.log`. You can also run `scripts/setup.sh` from a terminal.
 
 ## Use
 
-1. Press **👄 Lip dictation** above the prompt. The camera turns on (the camera light shows it).
+1. Press **🤫 Lip dictation** above the prompt. The camera turns on (the camera light shows it).
 2. When the row shows **■ Stop ● 0:03 ▁▁▃▆█▅▂▁▁**, mouth one phrase clearly, facing the camera in good light. The timer counts up and the waveform follows your lips: bars rise when your mouth moves and settle to a flat line when it is still, and a warning if your face leaves the frame. Short phrases work best; recording stops by itself after 20 seconds, with a countdown for the last 5.
 3. Press **■ Stop**. A "Reading lips" progress bar runs for a few seconds, then the text appears at the cursor. Nothing is sent until you press Enter.
 
