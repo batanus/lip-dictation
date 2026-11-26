@@ -1,0 +1,25 @@
+name: Bug
+description: Something does not work (setup, camera, button, training).
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you saw (a screenshot of the row above the prompt helps).
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Logs
+      description: For setup problems, the end of `~/.cache/lip-dictation/setup.log`. For dictation, the output of `scripts/lipread.sh check --camera`.
+      render: text
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: The plugin version (shown in ⚙ Settings), Claude Code version, macOS version, terminal or desktop app.
+      placeholder: v0.1.12, Claude Code 2.1.331, macOS 26.1, desktop app
+    validations:
+      required: true

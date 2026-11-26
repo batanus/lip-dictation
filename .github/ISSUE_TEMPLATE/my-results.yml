@@ -1,0 +1,37 @@
+name: My results
+description: Share how lip dictation reads your lips, good or bad. This is what improves it.
+labels: [results]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for trying it. **⚙ Settings → 🕘 History** shows what the model read and what else it considered; paste a few lines from it below.
+  - type: textarea
+    id: examples
+    attributes:
+      label: What you mouthed, and what it read
+      description: A few examples. The History pane or `scripts/lipread.sh --history` has them.
+      placeholder: |
+        mouthed: run the tests
+        read: Run the test
+        also read as: Run the tests / Run the best
+    validations:
+      required: true
+  - type: dropdown
+    id: model
+    attributes:
+      label: Model
+      options:
+        - Stock model
+        - Personal model (trained with Train on my lips)
+        - Both, compared
+  - type: input
+    id: setup
+    attributes:
+      label: Camera, light and Mac
+      placeholder: MacBook Air M2 built-in camera, desk lamp, evening
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Distance to the camera, glasses or beard, how clearly you mouthed, what you would use it for.

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Ideas and questions
+    url: https://github.com/batanus/lip-dictation/discussions
+    about: Suggestions, use cases and questions are welcome in Discussions.

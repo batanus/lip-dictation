@@ -112,7 +112,7 @@ button / /lip ──► mod (hooks/register.tsx) ──spawn──► scripts/li
 
 ## Contributing
 
-Ideas, bug reports and pull requests are all welcome: [open an issue](https://github.com/batanus/lip-dictation/issues) or send a PR. Things that would help most:
+Ideas, bug reports and pull requests are all welcome: share ideas and questions in [Discussions](https://github.com/batanus/lip-dictation/discussions), [open an issue](https://github.com/batanus/lip-dictation/issues/new/choose) (there is a template for sharing how well it reads your lips), or send a PR. Things that would help most:
 
 - **Accuracy:** better training phrases, smarter training, a language model tuned for dictation, or a newer lip-reading model.
 - **Other languages:** the model reads English only; a Russian or any other model would need new training data.
