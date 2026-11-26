@@ -2,7 +2,9 @@
 
 **Talk to Claude Code without making a sound.** Press a button above the prompt, mouth a phrase at your webcam, press again, and the words appear in the prompt box. A lip-reading model ([Auto-AVSR](https://github.com/mpc001/auto_avsr)) runs locally on your Mac: no audio is recorded and no video leaves your machine.
 
-![The lip dictation button above the prompt, with Settings on the right](docs/band.png)
+![Animation: press Lip dictation, mouth a phrase, press Stop, and the text appears in the prompt](docs/demo.gif)
+
+<sub>An illustration of the flow. Recognized text varies with your lips, camera and light.</sub>
 
 > **Status: prototype.** Lip reading is hard, and silent mouthing is harder than speech: expect word errors, especially on technical terms. Short phrases work best, and [training it on your lips](#train-it-on-your-lips) helps. Claude is told which words were lip-read (with the model's other readings), so it reads them in context and asks before acting on anything destructive.
 
@@ -34,6 +36,8 @@ Voice dictation needs you to speak out loud. Typing needs your hands and attenti
 Requirements: macOS on Apple Silicon, a webcam, about 2.5 GB of disk, and Claude Code 2.1.287 or newer (terminal or desktop app).
 
 ## Use
+
+![The Lip dictation button above the prompt in the Claude desktop app, with Settings on the right](docs/band.png)
 
 1. Press **📹 Lip dictation** above the prompt. The camera turns on (the camera light shows it).
 2. When the row shows **■ Stop ● 0:03 ▁▁▃▆█▅▂▁▁**, mouth one phrase clearly, facing the camera in good light. The timer counts up and the waveform follows your lips: bars rise when your mouth moves and settle to a flat line when it is still, and a warning if your face leaves the frame. Short phrases work best; recording stops by itself after 20 seconds, with a countdown for the last 5.
