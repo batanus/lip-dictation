@@ -10,12 +10,12 @@
 
 Recognition uses Auto-AVSR's visual-only model [`vsr_trlrs2lrs3vox2avsp_base`](https://github.com/mpc001/auto_avsr#model-zoo): 250M parameters, trained on 3,291 hours of video (LRS2, LRS3, VoxCeleb2, AVSpeech).
 
-| | Words right |
+| | Accuracy |
 |---|---:|
 | TED talks spoken aloud (the model's benchmark¹) | ~80% |
 | Mouthing silently at your webcam | ~50% |
 
-<sub>¹ [Auto-AVSR's published result](https://github.com/mpc001/auto_avsr#model-zoo): 20.3% word error rate on LRS3. The second row is from the author's first tests with short phrases.</sub>
+<sub>¹ [Auto-AVSR's published result](https://github.com/mpc001/auto_avsr#model-zoo): 20.3% word error rate on LRS3. The second row: about half of short phrases came out right in the author's first tests.</sub>
 
 Why it is lower here than on the benchmark:
 
