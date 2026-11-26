@@ -4,8 +4,6 @@
 
 ![Animation: press Lip dictation, mouth a phrase, press Stop, and the text appears in the prompt](docs/demo.gif)
 
-<sub>An illustration of the flow. Recognized text varies with your lips, camera and light.</sub>
-
 > **Status: prototype.** Lip reading is hard, and silent mouthing is harder than speech: expect word errors, especially on technical terms. Short phrases work best, and [training it on your lips](#train-it-on-your-lips) helps. Claude is told which words were lip-read (with the model's other readings), so it reads them in context and asks before acting on anything destructive.
 
 ## Why
