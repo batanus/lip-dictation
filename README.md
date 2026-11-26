@@ -14,7 +14,7 @@ Recognition uses Auto-AVSR's visual-only model [`vsr_trlrs2lrs3vox2avsp_base`](h
 |---|---:|
 | **Speaking aloud:** TED talks, the model's published benchmark¹ | ~80% |
 | **From audio** instead of lips, same benchmark, for comparison | ~98% |
-| **Mouthing silently** at a laptop webcam: short phrases, author's first tests | ~50% |
+| **Mouthing silently** at a laptop webcam | lower, varies by person ([training](#train-it-on-your-lips) helps) |
 
 <sub>¹ [Auto-AVSR model zoo](https://github.com/mpc001/auto_avsr#model-zoo): 20.3% word error rate on LRS3 (audio models: 1–2%).</sub>
 
