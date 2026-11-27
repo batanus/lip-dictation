@@ -4,7 +4,7 @@
 
 ![Animation: press Lip dictation, mouth a phrase, press Stop, and the text appears in the prompt](docs/demo.gif)
 
-> **Prototype:** lip reading is hard, so expect mistakes and read the text before sending. [How accurate it is](#accuracy).
+> **It learns your lips:** record a few dozen phrases and it adapts to you in minutes. Out of the box it still makes mistakes, so read the text before sending. [How accurate it is](#accuracy).
 
 ## Why
 
