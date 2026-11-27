@@ -4,6 +4,17 @@
 
 ![Animation: press Lip dictation, mouth a phrase, press Stop, and the text appears in the prompt](docs/demo.gif)
 
+## Why
+
+Voice dictation needs you to speak out loud. Typing needs your hands and attention. Silent dictation fits the moments in between:
+
+- **Open-plan office, coworking, café, library:** ask Claude to "run the tests" or "show me the diff" without talking over your neighbours.
+- **On a call or in a meeting:** you are muted or listening, and can still send Claude a request.
+- **At home when others are asleep:** late-night work without waking anyone.
+- **Noisy places:** a train, a busy office. Lips don't care about background noise.
+- **Privacy:** nobody nearby hears what you ask, and recognition never leaves your Mac.
+- **Resting your hands or voice:** short commands without typing, or when speaking aloud is hard or tiring.
+
 ## Accuracy
 
 **This is a prototype, and accuracy is modest.** Lip reading is hard, and silent mouthing is harder than speech: expect word errors, especially on technical terms, so read the text before you send it. Claude is told which words were lip-read (with the model's other readings), so it reads them in context and asks before acting on anything destructive.
@@ -26,17 +37,6 @@ Why it is lower here than on the benchmark:
 - **Speed over accuracy:** the plugin decodes with a beam of 10 and no external language model, to show the text about half a second after Stop.
 
 What helps: short phrases, facing the camera in even light, mouthing a little more clearly than you would speak, and [training it on your lips](#train-it-on-your-lips). Training checks how many words it gets wrong on held-out phrases, before and after, and keeps the personal model only when it gets fewer wrong, and **⚙ Settings → 🕘 History** shows what the model read and what else it considered, so you can see your own accuracy.
-
-## Why
-
-Voice dictation needs you to speak out loud. Typing needs your hands and attention. Silent dictation fits the moments in between:
-
-- **Open-plan office, coworking, café, library:** ask Claude to "run the tests" or "show me the diff" without talking over your neighbours.
-- **On a call or in a meeting:** you are muted or listening, and can still send Claude a request.
-- **At home when others are asleep:** late-night work without waking anyone.
-- **Noisy places:** a train, a busy office. Lips don't care about background noise.
-- **Privacy:** nobody nearby hears what you ask, and recognition never leaves your Mac.
-- **Resting your hands or voice:** short commands without typing, or when speaking aloud is hard or tiring.
 
 ## Quick start
 
