@@ -79,6 +79,17 @@ def add_clip(crops: np.ndarray, phrase: str) -> None:
         manifest.write(json.dumps({"file": name, "text": normalize(phrase)}) + "\n")
 
 
+def remove_last_clip() -> str | None:
+    """Delete the most recently recorded phrase; returns its text, or None when nothing is recorded."""
+    recorded = clips()
+    if not recorded:
+        return None
+    last = recorded.pop()
+    (folder() / last["file"]).unlink(missing_ok=True)
+    manifest_path().write_text("".join(json.dumps(clip) + "\n" for clip in recorded))
+    return last["text"]
+
+
 def forget() -> None:
     """Delete the recorded clips and the adapter."""
     shutil.rmtree(folder(), ignore_errors=True)

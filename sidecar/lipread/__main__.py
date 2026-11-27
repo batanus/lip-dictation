@@ -14,6 +14,7 @@
   {"event": "phrase", "text": "...", "recorded": 12, "total": 100}   first: the phrase to mouth
   {"event": "saved", "recorded": 13, "total": 100}                    its mouth crops are stored
   {"event": "done", "recorded": 100, "total": 100}                    every phrase is recorded
+Creating "<stop_file>.discard" before the stop file ends the recording without saving it (cancelled).
 
 Each dictation is also appended to ~/.cache/lip-dictation/dictations.jsonl (`lipread.sh --history`).
 
@@ -111,6 +112,8 @@ def capture(args, before_camera=None):
 
     if before_camera:
         before_camera()
+    # The caller creates "<stop file>.discard" before the stop file to throw the recording away.
+    discard_file = stop_file + ".discard"
     try:
         if go_file and not wait_for_go(go_file, stop_file, wait):
             emit("expired")
@@ -122,6 +125,7 @@ def capture(args, before_camera=None):
             args.camera,
             on_level=lambda t, level: emit("level", t=round(t, 1), level=None if level is None else round(level, 2)),
         )
+        discarded = os.path.exists(discard_file)
     except CameraError as error:
         emit("error", code="camera", message=str(error))
         return None
@@ -129,11 +133,11 @@ def capture(args, before_camera=None):
         if own_dir:
             shutil.rmtree(own_dir, ignore_errors=True)
         else:
-            for leftover in (stop_file, go_file):
+            for leftover in (stop_file, go_file, discard_file):
                 if leftover and os.path.exists(leftover):
                     os.remove(leftover)
 
-    if frames is None:
+    if frames is None or discarded:
         emit("cancelled")
         return None
     seconds = len(frames) / 25
@@ -201,6 +205,8 @@ def cmd_enroll(args) -> int:
     if missing:
         emit("error", code="not-installed", message="Run /lip-setup first. Missing: " + ", ".join(missing))
         return 2
+    if args.redo_last:  # the last phrase was mouthed wrong: drop it, so it is the next one again
+        personal.remove_last_clip()
     phrase = personal.next_phrase()
     recorded, total = len(personal.clips()), len(personal.phrases())
     if phrase is None:
@@ -317,6 +323,7 @@ def main() -> int:
     enroll.add_argument("--stop-file", help="stop when this file appears (default: a temp file, see the started event)")
     enroll.add_argument("--max-seconds", type=float, default=20)
     enroll.add_argument("--camera", type=int, default=0)
+    enroll.add_argument("--redo-last", action="store_true", help="delete the last recorded phrase and record it again")
     enroll.set_defaults(run=cmd_enroll)
 
     train = sub.add_parser("train", help="adapt the model to the recorded phrases")

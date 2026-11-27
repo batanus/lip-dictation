@@ -93,7 +93,7 @@ What helps: short phrases, facing the camera in even light, mouthing a little mo
 **How:** press **⚙ Settings → 🎯 Train on my lips** (or run `/lip-train`):
 
 1. The row shows a phrase to mouth, such as «run the tests», with the usual **■ Stop** and waveform. Mouth it and press Stop. Only the mouth area (96×96 px) of each phrase is kept, in `~/.cache/lip-dictation/personal/`.
-2. Press **● Next phrase** for the next one, as many as you like: **Train** appears after 20, and about 100 (10 to 15 minutes) works best. **Done** stops; the next `/lip-train` continues where you left off.
+2. Press **● Next phrase** for the next one, as many as you like: **Train** appears after 20, and about 100 (10 to 15 minutes) works best. **Done** stops; the next `/lip-train` continues where you left off. Mouthed it wrong? **✕ Discard** while recording throws the take away, and **↺ Redo** after saving records the last phrase again.
 3. Press **Train**. A progress bar runs for a few minutes (about 1 second per phrase per pass, 8 passes). It adds small LoRA adapters (about 2M parameters) to the model's encoder, the part that reads the lips, and leaves the decoder, its language model, as it was, holds one phrase in five out, and counts the words it gets wrong on those, before and after. A toast reports both; the personal model replaces the stock one only when it makes fewer errors.
 
 The phrases mix everyday English with short requests to a coding assistant, so the adapter learns your lips rather than one topic.

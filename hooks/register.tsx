@@ -109,6 +109,7 @@ type Run = {
   stopFile: string | null
   goFile: string | null
   stopRequested: boolean
+  discard: boolean // stop without saving (a training phrase mouthed wrong)
   armed: boolean
 }
 type Fragment = { text: string; alternatives: string[] }
@@ -235,7 +236,11 @@ async function handleEvent($: EngineInterface, live: Run, line: string): Promise
       }))
       return false
     case 'saved':
-      await update($, enrollAtom, enrollment => ({ ...enrollment, recorded: event.recorded ?? enrollment.recorded + 1 }))
+      await update($, enrollAtom, enrollment => ({
+        ...enrollment,
+        recorded: event.recorded ?? enrollment.recorded + 1,
+        lastSaved: enrollment.phrase,
+      }))
       return true
     case 'done':
       await update($, enrollAtom, enrollment => ({ ...enrollment, recorded: event.recorded ?? enrollment.recorded }))
@@ -247,8 +252,8 @@ async function handleEvent($: EngineInterface, live: Run, line: string): Promise
 }
 
 /** Runs the sidecar: at once (the caller set `busy`), or as the standby with `wait`. */
-async function dictate($: EngineInterface, kind: Run['kind'] = 'dictate', wait = false) {
-  const live: Run = { id: ++runCounter, kind, stopFile: null, goFile: null, stopRequested: false, armed: !wait }
+async function dictate($: EngineInterface, kind: Run['kind'] = 'dictate', wait = false, extraArgs: string[] = []) {
+  const live: Run = { id: ++runCounter, kind, stopFile: null, goFile: null, stopRequested: false, discard: false, armed: !wait }
   if (wait) standby = live
   else run = live // before any await: a second press sees it
   try {
@@ -259,6 +264,7 @@ async function dictate($: EngineInterface, kind: Run['kind'] = 'dictate', wait =
     let finished = false
     const argv = ['/bin/bash', `${$.plugin.root}/scripts/lipread.sh`, kind]
     if (wait) argv.push('--wait', String(STANDBY_SECONDS))
+    argv.push(...extraArgs)
     const stderr = await runLines($, argv, async line => {
       if (await handleEvent($, live, line)) finished = true
     })
@@ -296,9 +302,9 @@ async function arm($: EngineInterface, live: Run) {
 }
 
 /** Records the next training phrase (the band shows it while the camera is on). */
-function recordPhrase($: EngineInterface) {
+function recordPhrase($: EngineInterface, redo = false) {
   busy = true
-  void dictate($, 'enroll')
+  void dictate($, 'enroll', false, redo ? ['--redo-last'] : [])
 }
 
 /** /lip-train and the band's button: start recording training phrases. */
@@ -413,10 +419,12 @@ async function confirmSetup($: EngineInterface): Promise<string> {
   return 'Installing lip dictation in the background. Progress is in the status line.'
 }
 
-async function requestStop($: EngineInterface, live: Run) {
+async function requestStop($: EngineInterface, live: Run, discard = false) {
   live.stopRequested = true
+  live.discard ||= discard
   if (!live.stopFile) return // written as soon as the sidecar says where
   try {
+    if (live.discard) await $.fs.write(`${live.stopFile}.discard`, 'discard') // before the stop file
     await $.fs.write(live.stopFile, 'stop')
   } catch (error) {
     $.ui.toast(`Could not stop the recording: ${String(error)}`)
@@ -687,6 +695,16 @@ export const register: Register = (on, options) => {
       return (
         <Box flexDirection="row" gap={1} alignItems="center">
           <Button key="lip" {...hotkey} variant="primary" label="● Next phrase" onPress={press} />
+          {enrollment.lastSaved ? (
+            <Button
+              key="lip-redo"
+              variant="secondary"
+              label={`↺ Redo «${enrollment.lastSaved}»`}
+              onPress={() => {
+                if (!run && !busy) recordPhrase($, true)
+              }}
+            />
+          ) : null}
           {enough ? <Button key="lip-train-now" variant="secondary" label="Train" onPress={() => void train($)} /> : null}
           <Button key="lip-train-done" variant="secondary" label="Done" onPress={() => stopEnroll($)} />
           <Text dimColor>
@@ -725,6 +743,9 @@ export const register: Register = (on, options) => {
       return (
         <Box flexDirection="row" gap={1} alignItems="center">
           <Button key="lip" {...hotkey} variant="primary" label="■ Stop" onPress={press} />
+          {run?.kind === 'enroll' ? (
+            <Button key="lip-discard" variant="secondary" label="✕ Discard" onPress={() => run && requestStop($, run, true)} />
+          ) : null}
           <Text color="error">●</Text>
           <Text tabular>{formatTime(meter.seconds)}</Text>
           <Text color="claude">{waveText(meter.levels)}</Text>

@@ -1,4 +1,5 @@
 import { expect, mock, test } from 'claude-code/testing'
+import type { TestBody } from 'claude-code/testing'
 
 import { formatTime, hintFragment, historyLines, recordingHint, waveText } from '../hooks/register'
 
@@ -280,5 +281,65 @@ test('after a dictation, the next press starts the loaded standby instead of a n
   expect(filled).toEqual(['first', 'second'])
   expect(spawned).toHaveLength(3) // the standby was used, and the next one is loading
   expect(await ui.find({ type: 'Button', text: '📹 Lip dictation' })).toBeDefined()
+  await ui.unmount()
+})
+
+/** A fake `lipread.sh enroll`: says the phrase, records until the stop file, then saves or (with
+ * "<stop>.discard" written first) cancels. `--redo-last` drops the last saved phrase first. */
+function fakeEnroll(on: Parameters<TestBody>[1]) {
+  const clock = mock.clock(on)
+  const state = { recorded: 24, written: [] as string[], spawned: [] as string[][] }
+  on('ui.toast', () => ({ value: undefined }))
+  on('ui.status', () => ({ value: undefined }))
+  on('process.run', () => ({
+    value: { exitCode: 0, stdout: '', stderr: '', isStdoutTruncated: false, isStderrTruncated: false },
+  }))
+  on('fs.write', (_, e) => {
+    state.written.push(e.path)
+    return { value: undefined }
+  })
+  on('process.spawn', async function* (_, e) {
+    state.spawned.push([...e.argv])
+    state.written = []
+    if (e.argv.includes('--redo-last')) state.recorded -= 1
+    yield line({ event: 'phrase', text: 'run the tests', recorded: state.recorded, total: 98 })
+    yield line({ event: 'started', stop_file: '/tmp/lipread-test/stop' })
+    yield line({ event: 'recording', max_seconds: 20 })
+    while (!state.written.includes('/tmp/lipread-test/stop')) await clock.sleep(50) // mouthing until Stop
+    if (state.written.includes('/tmp/lipread-test/stop.discard')) {
+      yield line({ event: 'cancelled' })
+    } else {
+      state.recorded += 1
+      yield line({ event: 'saved', recorded: state.recorded, total: 98 })
+    }
+    return { value: { code: 0, signal: null } }
+  })
+  return { clock, state }
+}
+
+test('training: Discard ends a phrase without saving it', async ($, on) => {
+  const { clock, state } = fakeEnroll(on)
+  const ui = await $.ui.mount({ plugin: 'lip-dictation', surface: 'desktop', component: 'AbovePrompt', props: BAND })
+  await ui.press({ key: 'lip-menu' })
+  await ui.press({ key: 'lip-train' })
+  await ui.press({ key: 'lip-discard' })
+  expect(state.written).toEqual(['/tmp/lipread-test/stop.discard', '/tmp/lipread-test/stop']) // the mark goes first
+  await clock.advance(50)
+  expect(await ui.find({ type: 'Text', text: /24\/98 phrases recorded/ })).toBeDefined()
+  expect(await ui.find({ type: 'Button', text: /Redo/ })).toBeUndefined()
+  await ui.unmount()
+})
+
+test('training: Redo records the last saved phrase again', async ($, on) => {
+  const { clock, state } = fakeEnroll(on)
+  const ui = await $.ui.mount({ plugin: 'lip-dictation', surface: 'desktop', component: 'AbovePrompt', props: BAND })
+  await ui.press({ key: 'lip-menu' })
+  await ui.press({ key: 'lip-train' })
+  await ui.press({ key: 'lip' }) // Stop: saved
+  await clock.advance(50)
+  expect(await ui.find({ type: 'Button', text: '↺ Redo «run the tests»' })).toBeDefined()
+  await ui.press({ key: 'lip-redo' })
+  expect(state.spawned.at(-1)).toContain('--redo-last')
+  expect(state.recorded).toBe(24) // the saved one was dropped
   await ui.unmount()
 })

@@ -6,8 +6,8 @@ export type Meter = { seconds: number; maxSeconds: number; levels: (number | nul
 /** Setup progress: the step being run and, while downloading, a percent (null = no known end). */
 export type SetupProgress = { step: string; percent: number | null }
 
-/** Recording training phrases: the phrase being mouthed and how many of the list are recorded. */
-export type Enrollment = { phrase: string; recorded: number; total: number }
+/** Recording training phrases: the phrase being mouthed, how many of the list are recorded, and the one just saved (to redo). */
+export type Enrollment = { phrase: string; recorded: number; total: number; lastSaved?: string }
 
 /** Training the personal adapter: the step and its progress. */
 export type Training = { step: string; done: number; total: number }
