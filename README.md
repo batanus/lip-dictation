@@ -4,6 +4,8 @@
 
 ![Animation: press Lip dictation, mouth a phrase, press Stop, and the text appears in the prompt](docs/demo.gif)
 
+> **Prototype:** lip reading is hard, so expect mistakes and read the text before sending. [How accurate it is](#accuracy).
+
 ## Why
 
 Voice dictation needs you to speak out loud. Typing needs your hands and attention. Silent dictation fits the moments in between:
@@ -14,29 +16,6 @@ Voice dictation needs you to speak out loud. Typing needs your hands and attenti
 - **Noisy places:** a train, a busy office. Lips don't care about background noise.
 - **Privacy:** nobody nearby hears what you ask, and recognition never leaves your Mac.
 - **Resting your hands or voice:** short commands without typing, or when speaking aloud is hard or tiring.
-
-## Accuracy
-
-**This is a prototype, and accuracy is modest.** Lip reading is hard, and silent mouthing is harder than speech: expect word errors, especially on technical terms, so read the text before you send it. Claude is told which words were lip-read (with the model's other readings), so it reads them in context and asks before acting on anything destructive.
-
-Recognition uses Auto-AVSR's visual-only model [`vsr_trlrs2lrs3vox2avsp_base`](https://github.com/mpc001/auto_avsr#model-zoo): 250M parameters, trained on 3,291 hours of video (LRS2, LRS3, VoxCeleb2, AVSpeech).
-
-| | Accuracy |
-|---|---:|
-| **Speaking aloud:** TED talks, the model's published benchmark¹ | ~80% |
-| **From audio** instead of lips, same benchmark, for comparison | ~98% |
-| **Mouthing silently** at a laptop webcam | lower, varies by person ([training](#train-it-on-your-lips) helps) |
-
-<sub>¹ [Auto-AVSR model zoo](https://github.com/mpc001/auto_avsr#model-zoo): 20.3% word error rate on LRS3 (audio models: 1–2%).</sub>
-
-Why it is lower here than on the benchmark:
-
-- **Silent mouthing moves the lips less** than speaking aloud, and the model learned from people speaking aloud.
-- **A laptop webcam** at an angle, in office light, is harder than a TV camera on a well-lit face.
-- **Vocabulary:** TED talks rarely say "refactor" or "pull request".
-- **Speed over accuracy:** the plugin decodes with a beam of 10 and no external language model, to show the text about half a second after Stop.
-
-What helps: short phrases, facing the camera in even light, mouthing a little more clearly than you would speak, and [training it on your lips](#train-it-on-your-lips). Training checks how many words it gets wrong on held-out phrases, before and after, and keeps the personal model only when it gets fewer wrong, and **⚙ Settings → 🕘 History** shows what the model read and what else it considered, so you can see your own accuracy.
 
 ## Quick start
 
@@ -83,6 +62,29 @@ In a terminal session, focus the button with ctrl+x then tab and press `l`, or b
 - **🕘 History** — what was read, what else the model considered, and what you sent.
 - **🗑 Delete my data** — training recordings, personal model and history.
 - The installed version, then **✕ Close**.
+
+## Accuracy
+
+**This is a prototype, and accuracy is modest.** Lip reading is hard, and silent mouthing is harder than speech: expect word errors, especially on technical terms, so read the text before you send it. Claude is told which words were lip-read (with the model's other readings), so it reads them in context and asks before acting on anything destructive.
+
+Recognition uses Auto-AVSR's visual-only model [`vsr_trlrs2lrs3vox2avsp_base`](https://github.com/mpc001/auto_avsr#model-zoo): 250M parameters, trained on 3,291 hours of video (LRS2, LRS3, VoxCeleb2, AVSpeech).
+
+| | Accuracy |
+|---|---:|
+| **Speaking aloud:** TED talks, the model's published benchmark¹ | ~80% |
+| **From audio** instead of lips, same benchmark, for comparison | ~98% |
+| **Mouthing silently** at a laptop webcam | lower, varies by person ([training](#train-it-on-your-lips) helps) |
+
+<sub>¹ [Auto-AVSR model zoo](https://github.com/mpc001/auto_avsr#model-zoo): 20.3% word error rate on LRS3 (audio models: 1–2%).</sub>
+
+Why it is lower here than on the benchmark:
+
+- **Silent mouthing moves the lips less** than speaking aloud, and the model learned from people speaking aloud.
+- **A laptop webcam** at an angle, in office light, is harder than a TV camera on a well-lit face.
+- **Vocabulary:** TED talks rarely say "refactor" or "pull request".
+- **Speed over accuracy:** the plugin decodes with a beam of 10 and no external language model, to show the text about half a second after Stop.
+
+What helps: short phrases, facing the camera in even light, mouthing a little more clearly than you would speak, and [training it on your lips](#train-it-on-your-lips). Training checks how many words it gets wrong on held-out phrases, before and after, and keeps the personal model only when it gets fewer wrong, and **⚙ Settings → 🕘 History** shows what the model read and what else it considered, so you can see your own accuracy.
 
 ## Train it on your lips
 
